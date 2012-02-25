@@ -176,4 +176,14 @@ class Kohana_Curl {
 		
 		$this->setopt(CURLOPT_FILE, $file_handle);
 	}
+	
+	/**
+	 * Returns response if used in a multi_curl execution.
+	 * @return string 
+	 */
+	public function get_response() {
+		
+		return curl_multi_getcontent($this->ch);
+		
+	}
 }
