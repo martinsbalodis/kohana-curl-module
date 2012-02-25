@@ -101,7 +101,7 @@ Class Kohana_Curl_Multi {
 							if($job->get_handle() === $info['handle']) {
 
 								// handle found
-								$job->executed();
+								$this->job_executed($job);
 
 								break;
 							}
@@ -116,5 +116,15 @@ Class Kohana_Curl_Multi {
 				throw new Exception('cURL select failure or timeout.');
 			}
 		}
+	}
+	
+	/**
+	 * Extend this to add new jobs when one has executed. 
+	 * @param Curl_MultiReady $job 
+	 */
+	protected function job_executed(Curl_MultiReady $job) {
+		
+		$job->executed();
+		
 	}
 }
