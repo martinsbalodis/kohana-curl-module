@@ -44,7 +44,12 @@ Class Kohana_Curl_Multi {
 		if(count($this->jobs) <= $this->handle_limit) {
 			
 			$this->jobs[] = $curl;
-			curl_multi_add_handle($this->mch, $curl->get_handle());
+			$success = curl_multi_add_handle($this->mch, $curl->get_handle());
+			
+			if($success!==0) {
+				throw new Kohana_Exception("Failed to add cURL handle 
+					to multi cURL. error code ".$success);
+			}
 			
 		} 
 		// Add jobs to wait in line
