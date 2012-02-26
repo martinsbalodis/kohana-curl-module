@@ -127,6 +127,12 @@ class Kohana_Curl {
 		else {
 			// Executes the request
 			$result = curl_exec($this->ch);
+			
+			if($result === false) {
+				
+				throw new Exception("cURL error - ".curl_error($this->ch));
+				
+			}
 		}
 
 		
