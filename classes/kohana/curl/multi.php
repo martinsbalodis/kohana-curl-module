@@ -14,7 +14,7 @@ Class Kohana_Curl_Multi {
 	 * Multi Curl Handle
 	 * @var resource
 	 */
-	private $mch;
+	protected $mch;
 	
 	/**
 	 * Limit of handles being executed at the same time
