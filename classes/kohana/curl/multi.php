@@ -15,24 +15,12 @@ Class Kohana_Curl_Multi {
 	 * @var resource
 	 */
 	protected $mch;
-	
-	/**
-	 * Limit of handles being executed at the same time
-	 * @var integer
-	 */
-	protected $handle_limit = 5;
 
 	/**
 	 * Curl jobs to execute or being executed
 	 * @var Curl[]
 	 */
 	private $jobs = array();
-	
-	/**
-	 * Jobs that are waiting in the line to be executed.
-	 * @var type 
-	 */
-	private $jobs_in_queue = array();
 
 	/**
 	 * Add new job
@@ -40,24 +28,14 @@ Class Kohana_Curl_Multi {
 	 */
 	public function add_job(Curl_MultiReady $curl) {
 		
-		// Add jobs for execution
-		if(count($this->jobs) <= $this->handle_limit) {
-			
-			$this->jobs[] = $curl;
-			$success = curl_multi_add_handle($this->mch, $curl->get_handle());
-			
-			if($success!==0) {
-				throw new Kohana_Exception("Failed to add cURL handle 
-					to multi cURL. error code ".$success);
-			}
-			
-		} 
-		// Add jobs to wait in line
-		else {
-			
-			$this->jobs_in_queue[] = $curl;
-			
+		$success = curl_multi_add_handle($this->mch, $curl->get_handle());
+
+		if($success!==0) {
+			throw new Kohana_Exception("Failed to add cURL handle 
+				to multi cURL. error code ".$success);
 		}
+		
+		$this->jobs[] = $curl;
 		
 	}
 	
@@ -65,8 +43,8 @@ Class Kohana_Curl_Multi {
 	 * Constructor. Initializes multi curl handle
 	 */
 	public function __construct() {
-			$this->mch = curl_multi_init();
-			curl_multi_select($this->mch);
+		$this->mch = curl_multi_init();
+		curl_multi_select($this->mch);
 	}
 
 	/**
@@ -130,6 +108,24 @@ Class Kohana_Curl_Multi {
 	protected function job_executed(Curl_MultiReady $job) {
 		
 		$job->executed();
+		
+	}
+	
+	/**
+	 * Remove job from current job execution queue
+	 * @param Curl_MultiReady $job 
+	 */
+	protected function remove_job(Curl_MultiReady $job) {
+		
+		$job_key = array_search($job, $this->jobs, true);
+		
+		if($job_key === false) {
+			throw new Kohana_Exception("Job not found it current execution list");
+		}
+		
+		unset($this->jobs[$job_key]);
+		
+		curl_multi_remove_handle($this->mch, $job->get_handle());
 		
 	}
 }
