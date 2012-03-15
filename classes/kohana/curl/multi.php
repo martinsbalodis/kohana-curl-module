@@ -20,7 +20,7 @@ Class Kohana_Curl_Multi {
 	 * Curl jobs to execute or being executed
 	 * @var Curl[]
 	 */
-	private $jobs = array();
+	protected $jobs = array();
 
 	/**
 	 * Add new job
