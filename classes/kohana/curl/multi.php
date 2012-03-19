@@ -52,52 +52,55 @@ Class Kohana_Curl_Multi {
 	 */
 	public function exec() {
 		
-		// Multi curl is active
-		$active = null;
+		$active = true;
 		
-		// execute the handles
-		do {
-			$mrc = curl_multi_exec($this->mch, $active);
-		} while ($mrc == CURLM_CALL_MULTI_PERFORM);
-		
-		if($mrc != CURLM_OK) {
-			throw new Exception('Something went wrong!');
-		}
-		
-		// Execute the handles
-		while ($active && $mrc == CURLM_OK) {
+		// Execute while there is a job to be executed
+		while($active) {
 			
-			// Wait for activity on any curl_multi connection
-			if (curl_multi_select($this->mch) != -1) {
-				do {
-					
-					// Run the sub-connections of the current cURL handle
-					$mrc = curl_multi_exec($this->mch, $active);
-					
-					// Read execution statuses.
-					while ($info = curl_multi_info_read($this->mch, $msgs_in_queue)) {
+			// Read execution statuses.
+			while ($info = curl_multi_info_read($this->mch)) {
 
-						// Find corresponding resource. 
-						foreach($this->jobs as $job) {
+				// Find corresponding resource. 
+				foreach ($this->jobs as $job) {
 
-							/* @var $job Curl_MultiReady */
-							if($job->get_handle() === $info['handle']) {
+					/* @var $job Curl_MultiReady */
+					if ($job->get_handle() === $info['handle']) {
 
-								// handle found
-								$this->job_executed($job);
+						// handle found
+						$this->job_executed($job);
 
-								break;
-							}
-						}
+						break;
 					}
-					
-					// @TODO add new jobs from queue
+				}
+			}
+			
+//			Before version 7.20.0: If you receive CURLM_CALL_MULTI_PERFORM, 
+//			this basically means that you should call curl_multi_perform again,
+//			before you select() on more actions. You don't have to do it
+//			immediately, but the return code means that libcurl may have more 
+//			data available to return or that there may be more data to send off 
+//			before it is "satisfied". Do note that curl_multi_perform(3) will 
+//			return CURLM_CALL_MULTI_PERFORM only when it wants to be called 
+//			again immediately. When things are fine and there is nothing
+//			immediate it wants done, it'll return CURLM_OK and you need to wait
+//			for "action" and then call this function again.
+//
+//			This function only returns errors etc regarding the whole multi
+//			stack. Problems still might have occurred on individual transfers
+//			even when this function returns CURLM_OK.
+			
+			// Run the sub-connections of the current cURL handle
+			do {
+				$mrc = curl_multi_exec($this->mch, $active);
+			} while ($mrc == CURLM_CALL_MULTI_PERFORM);
 
-				} while ($mrc == CURLM_CALL_MULTI_PERFORM);
+			if ($mrc !== CURLM_OK) {
+				throw new Kohana_Exception("Curl ERROR-" . $mrc);
 			}
-			else {
-				throw new Exception('cURL select failure or timeout.');
-			}
+			
+			// free time
+			usleep(5e2);
+			
 		}
 	}
 	

@@ -31,7 +31,7 @@ class Kohana_Curl_Multi_Queue extends Curl_Multi {
 	public function add_job(Curl_MultiReady $curl) {
 		
 		// if current job execution queue is full then store it in waiting list
-		if(count($this->jobs) <= $this->handle_limit) {
+		if(count($this->jobs) < $this->handle_limit) {
 			
 			parent::add_job($curl);
 			
