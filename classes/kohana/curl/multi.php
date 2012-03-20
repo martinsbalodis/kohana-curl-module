@@ -55,7 +55,7 @@ Class Kohana_Curl_Multi {
 		$active = true;
 		
 		// Execute while there is a job to be executed
-		while($active) {
+		while($active || $this->is_running()) {
 			
 			// Read execution statuses.
 			while ($info = curl_multi_info_read($this->mch)) {
@@ -73,6 +73,9 @@ Class Kohana_Curl_Multi {
 					}
 				}
 			}
+			
+			// Adds new jobs for execution
+			$this->next_job();
 			
 //			Before version 7.20.0: If you receive CURLM_CALL_MULTI_PERFORM, 
 //			this basically means that you should call curl_multi_perform again,
@@ -110,7 +113,18 @@ Class Kohana_Curl_Multi {
 	 */
 	protected function job_executed(Curl_MultiReady $job) {
 		
+		// remove job from execution stack
+		$this->remove_job($job);
+		
+		// trigger event that job is executed
 		$job->executed();
+		
+	}
+	
+	/**
+	 * Override this method to add new jobs to queue when there is place
+	 */
+	protected function next_job() {
 		
 	}
 	
@@ -129,6 +143,16 @@ Class Kohana_Curl_Multi {
 		unset($this->jobs[$job_key]);
 		
 		curl_multi_remove_handle($this->mch, $job->get_handle());
+		
+	}
+	
+	/**
+	 * Extend this function to infinite job execution loop even when there is
+	 * nothing to execute.
+	 */
+	protected function is_running() {
+		
+		return false;
 		
 	}
 }
