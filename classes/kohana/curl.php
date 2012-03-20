@@ -192,4 +192,17 @@ class Kohana_Curl {
 		return curl_multi_getcontent($this->ch);
 		
 	}
+	
+	/**
+	 * Direct curl thru proxy
+	 * 
+	 * @param string $server ip:port
+	 * @param integer $type CURLPROXY_HTTP | CURLPROXY_SOCKS5
+	 */
+	public function set_proxy($server, $type = CURLPROXY_HTTP) {
+		
+		$this->setopt(CURLOPT_PROXY, $server);
+		$this->setopt(CURLOPT_PROXYTYPE, $type);
+		
+	}
 }
