@@ -55,27 +55,7 @@ Class Kohana_Curl_Multi {
 		$active = true;
 		
 		// Execute while there is a job to be executed
-		while($active || $this->is_running()) {
-			
-			// Read execution statuses.
-			while ($info = curl_multi_info_read($this->mch)) {
-
-				// Find corresponding resource. 
-				foreach ($this->jobs as $job) {
-
-					/* @var $job Curl_MultiReady */
-					if ($job->get_handle() === $info['handle']) {
-
-						// handle found
-						$this->job_executed($job);
-
-						break;
-					}
-				}
-			}
-			
-			// Adds new jobs for execution
-			$this->next_job();
+		while($active || !empty($this->jobs) || $this->is_running()) {
 			
 //			Before version 7.20.0: If you receive CURLM_CALL_MULTI_PERFORM, 
 //			this basically means that you should call curl_multi_perform again,
@@ -100,6 +80,26 @@ Class Kohana_Curl_Multi {
 			if ($mrc !== CURLM_OK) {
 				throw new Kohana_Exception("Curl ERROR-" . $mrc);
 			}
+			
+			// Read execution statuses.
+			while ($info = curl_multi_info_read($this->mch)) {
+
+				// Find corresponding resource. 
+				foreach ($this->jobs as $job) {
+
+					/* @var $job Curl_MultiReady */
+					if ($job->get_handle() === $info['handle']) {
+
+						// handle found
+						$this->job_executed($job);
+
+						break;
+					}
+				}
+			}
+			
+			// Adds new jobs for execution
+			$this->next_job();
 			
 			// free time
 			usleep(5e2);
