@@ -205,4 +205,12 @@ class Kohana_Curl {
 		$this->setopt(CURLOPT_PROXYTYPE, $type);
 		
 	}
+	
+	/**
+	 * close curl session when object removed
+	 */
+	public function __destruct() {
+		
+		curl_close($this->ch);
+	}
 }
